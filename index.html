@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task 4 Full Project - Sovit</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f7fa;
+      color: #333;
+    }
+    nav {
+      background: #333;
+      padding: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    section { padding: 2rem; }
+    h1, h2 { text-align: center; }
+
+    /* To-Do Styles */
+    #todo {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    #todo input[type="text"] {
+      width: 70%;
+      padding: 10px;
+      margin-right: 10px;
+    }
+    #todo button {
+      padding: 10px;
+    }
+    #taskList li {
+      background: #eef;
+      padding: 10px;
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      border-radius: 5px;
+    }
+    #taskList li.completed {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    /* Product Styles */
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .products {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      padding: 1rem;
+    }
+    .product-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .product-card:hover {
+      transform: scale(1.03);
+    }
+    .price { color: #0066cc; font-weight: bold; }
+
+    /* Contact Form Styles */
+    #contact {
+      background: #fff;
+      margin: 2rem auto;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    #contactForm {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
+    }
+
+    #contactForm input, #contactForm textarea {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    #contactForm textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    #contactForm button {
+      background: #0066cc;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media (min-width: 600px) {
+      .form-group {
+        flex-direction: row;
+      }
+
+      .form-group input {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#portfolio">Portfolio</a>
+    <a href="#todo">To-Do</a>
+    <a href="#products">Products</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <!-- Portfolio Section -->
+  <section id="portfolio">
+    <h1>👨‍💻 Sovit Sarbeswar Lenka</h1>
+    <p style="text-align:center;">I'm a passionate web developer. Explore my portfolio, task list, and product showcase below!</p>
+  </section>
+
+  <!-- To-Do List Section -->
+  <section id="todo">
+    <h2>📝 To-Do List</h2>
+    <div style="text-align:center;">
+      <input type="text" id="taskInput" placeholder="Enter a task..." />
+      <button onclick="addTask()">Add</button>
+    </div>
+    <ul id="taskList"></ul>
+  </section>
+
+  <!-- Product Listing Section -->
+  <section id="products">
+    <h2>🛍️ Product Listing</h2>
+    <div class="filters">
+      <select id="categoryFilter">
+        <option value="all">All</option>
+        <option value="electronics">Electronics</option>
+        <option value="clothing">Clothing</option>
+        <option value="books">Books</option>
+      </select>
+      <select id="sortFilter">
+        <option value="default">Sort By</option>
+        <option value="low-high">Price: Low to High</option>
+        <option value="high-low">Price: High to Low</option>
+        <option value="rating">Rating</option>
+      </select>
+    </div>
+    <div class="products" id="productList"></div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact">
+    <h2>📬 Contact Me</h2>
+    <form id="contactForm">
+      <div class="form-group">
+        <input type="text" placeholder="Your Name" required />
+        <input type="email" placeholder="Your Email" required />
+      </div>
+      <textarea placeholder="Your Message" required></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </section>
+
+  <script>
+    // To-Do Script
+    document.addEventListener("DOMContentLoaded", () => {
+      loadTasks();
+      document.getElementById("categoryFilter").addEventListener("change", applyFilters);
+      document.getElementById("sortFilter").addEventListener("change", applyFilters);
+      displayProducts(products);
+    });
+
+    function loadTasks() {
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      tasks.forEach(task => createTaskElement(task.text, task.completed));
+    }
+
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const taskText = input.value.trim();
+      if (taskText !== "") {
+        createTaskElement(taskText, false);
+        saveTaskToLocalStorage(taskText);
+        input.value = "";
+      }
+    }
+
+    function createTaskElement(text, completed) {
+      const li = document.createElement("li");
+      li.textContent = text;
+      if (completed) li.classList.add("completed");
+
+      li.addEventListener("click", () => {
+        li.classList.toggle("completed");
+        updateTaskInLocalStorage(text, li.classList.contains("completed"));
+      });
+
+      const btn = document.createElement("button");
+      btn.textContent = "🗑";
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        li.remove();
+        deleteTaskFromLocalStorage(text);
+      };
+
+      li.appendChild(btn);
+      document.getElementById("taskList").appendChild(li);
+    }
+
+    function saveTaskToLocalStorage(taskText) {
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      tasks.push({ text: taskText, completed: false });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function deleteTaskFromLocalStorage(taskText) {
+      let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      tasks = tasks.filter(task => task.text !== taskText);
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function updateTaskInLocalStorage(taskText, completed) {
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      tasks.forEach(task => {
+        if (task.text === taskText) task.completed = completed;
+      });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    // Product Listing Script
+    const products = [
+      { name: "Smartphone", category: "electronics", price: 15000, rating: 4.3 },
+      { name: "T-shirt", category: "clothing", price: 499, rating: 3.8 },
+      { name: "Laptop", category: "electronics", price: 45000, rating: 4.7 },
+      { name: "Jeans", category: "clothing", price: 999, rating: 4.0 },
+      { name: "JavaScript Book", category: "books", price: 599, rating: 4.5 },
+      { name: "Headphones", category: "electronics", price: 1299, rating: 4.2 },
+      { name: "Notebook", category: "books", price: 149, rating: 3.9 },
+      { name: "Hoodie", category: "clothing", price: 899, rating: 4.1 }
+    ];
+
+    function displayProducts(items) {
+      const container = document.getElementById("productList");
+      container.innerHTML = "";
+      items.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product-card";
+        div.innerHTML = `
+          <h3>${p.name}</h3>
+          <p>Category: ${p.category}</p>
+          <p class="price">₹${p.price}</p>
+          <p>Rating: ${p.rating}</p>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function applyFilters() {
+      let filtered = [...products];
+      const category = document.getElementById("categoryFilter").value;
+      const sort = document.getElementById("sortFilter").value;
+
+      if (category !== "all") {
+        filtered = filtered.filter(p => p.category === category);
+      }
+
+      if (sort === "low-high") {
+        filtered.sort((a, b) => a.price - b.price);
+      } else if (sort === "high-low") {
+        filtered.sort((a, b) => b.price - a.price);
+      } else if (sort === "rating") {
+        filtered.sort((a, b) => b.rating - a.rating);
+      }
+
+      displayProducts(filtered);
+    }
+
+    // Contact Form Submit
+    document.getElementById("contactForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      alert("Thank you! Your message has been sent.");
+      this.reset();
+    });
+  </script>
+</body>
+</html>
